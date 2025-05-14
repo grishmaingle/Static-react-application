@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application-.git'
+                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application-.git'
             }
         }
 
@@ -33,7 +33,7 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                sh 'trivy image ${DOCKER_IMAGE}:latest || true'
+                sh "trivy image ${DOCKER_IMAGE}:latest || true"
             }
         }
 
