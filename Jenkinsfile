@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'yourdockerhubusername/react-app'
+        DOCKER_IMAGE = 'grishmai28/react-app'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/your-user/your-repo.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application-.git'
             }
         }
 
