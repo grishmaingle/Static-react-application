@@ -24,16 +24,16 @@ pipeline {
             }
         }
 
-        stage('SonarQube Scan') {
-            steps {
-               withSonarQubeEnv("${SONARQUBE_SERVER}") {
-    // use the SonarScanner tool installed/configured in Jenkins
-                    def scannerHome = tool 'SonarQubeScanner'  // this must match the name in Global Tool Config
-                    sh "${scannerHome}/bin/sonar-scanner"
-}
-
+       stage('SonarQube Scan') {
+    steps {
+        withSonarQubeEnv("${SONARQUBE_SERVER}") {
+            script {
+                def scannerHome = tool 'SonarQubeScanner'  // this must match the name in Global Tool Config
+                sh "${scannerHome}/bin/sonar-scanner"
             }
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
