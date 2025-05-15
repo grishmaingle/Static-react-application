@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube' // Configure this in Jenkins "Manage Jenkins > Configure System"
+        SONARQUBE_SERVER = 'SonarQube'
     }
 
     stages {
@@ -44,4 +44,14 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            echo '✅ Pipeline completed successfully.'
+        }
+        failure {
+            echo '❌ Pipeline failed.'
+        }
+    }
 }
+
