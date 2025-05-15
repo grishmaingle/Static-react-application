@@ -2,49 +2,45 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'grishmai28/react-app'
+        SONARQUBE_SERVER = 'SonarQube' // Configure this in Jenkins "Manage Jenkins > Configure System"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application-.git'
+                git 'https://github.com/grishmaingle/Static-react-application-.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install Dependencies') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:latest")
+                sh 'npm install'
+            }
+        }
+
+        stage('Build React App') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    sh 'sonar-scanner'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            environment {
-                SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
-            }
+        stage('Docker Build') {
             steps {
-                withSonarQubeEnv('My SonarQube Server') {
-                    sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
-                }
+                sh 'docker build -t react-app .'
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh "trivy image ${DOCKER_IMAGE}:latest || true"
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push ${DOCKER_IMAGE}:latest
-                    '''
-                }
+                sh 'trivy image react-app'
             }
         }
     }
