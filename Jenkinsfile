@@ -16,15 +16,9 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            sonar-scanner \
-                              -Dsonar.projectKey=react-app \
-                              -Dsonar.sources=. \
-                              -Dsonar.login=$SONAR_TOKEN
-                        '''
-                    }
-                }
+    def scannerHome = tool 'SonarQubeScanner'
+    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
+}
             }
         }
 
