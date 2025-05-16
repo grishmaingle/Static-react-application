@@ -1,17 +1,15 @@
 pipeline {
     agent any
 
-    // Jenkins credentials ID for Docker Hub (username/password)
     environment {
-        DOCKER_HUB_CREDENTIALS = 'docker-hub-creds' 
+        DOCKER_HUB_CREDENTIALS = 'docker-hub-creds'
+        GIT_CREDENTIALS_ID = 'github-creds' // The ID you just created
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the React application from GitHub
-                git branch: 'main',
-                    url: 'https://github.com/grishmai28/react-app.git'
+                git credentialsId: "${GIT_CREDENTIALS_ID}", branch: 'main', url: 'https://github.com/grishmaingle/Static-react-application.git'
             }
         }
 
