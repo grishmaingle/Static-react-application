@@ -14,14 +14,16 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                // Run SonarQube scanner using the SonarQube server configured in Jenkins (named "SonarQube")
-                withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. ' +
-                       '-Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
-                }
-            }
-        }
+  steps {
+    withSonarQubeEnv('SonarQube') {
+      script {
+        def scannerHome = tool 'SonarQubeScanner'
+        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=."
+      }
+    }
+  }
+}
+
 
         stage('Build Docker Image') {
             steps {
