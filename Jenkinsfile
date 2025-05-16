@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        sonarQubeScanner 'SonarQubeScanner' // must match the name in Jenkins global tools
+    }
+
     environment {
         DOCKER_HUB_CREDENTIALS = 'docker-hub-creds'
         GIT_CREDENTIALS_ID = 'github-creds'
@@ -14,20 +18,13 @@ pipeline {
         }
 
 
-    tools {
-        // Match with the name used in Global Tool Configuration
-        sonarQubeScanner 'SonarQubeScanner'
-    }
-
-    stages {
-        stage('SonarQube Analysis') {
+   stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner -Dsonar.projectKey=your_project_key -Dsonar.sources=./src'
+                    sh 'sonar-scanner -Dsonar.projectKey=static-react-app -Dsonar.sources=src'
                 }
             }
         }
-    }
 
 
         stage('Build Docker Image') {
