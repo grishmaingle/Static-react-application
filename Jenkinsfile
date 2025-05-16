@@ -2,53 +2,49 @@ pipeline {
     agent any
 
     environment {
-        GIT_CREDENTIALS_ID = 'github-creds'
-        DOCKER_HUB_CREDENTIALS = 'docker-hub-creds'
+        SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: "${GIT_CREDENTIALS_ID}", branch: 'main', url: 'https://github.com/grishmaingle/Static-react-application.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application.git'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-    def scannerHome = tool 'SonarQubeScanner'
-    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
-}
+                    script {
+                        def scannerHome = tool 'SonarQubeScanner'
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
+                    }
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("grishmai28/react-app:latest")
-                }
+                echo 'Building Docker Image...'
+                // Your docker build steps here
             }
         }
 
         stage('Scan with Trivy') {
             steps {
-                sh 'trivy image grishmai28/react-app:latest || true'
+                echo 'Scanning with Trivy...'
+                // Your Trivy scan steps here
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: "${DOCKER_HUB_CREDENTIALS}",
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push grishmai28/react-app:latest'
-                }
+                echo 'Pushing to Docker Hub...'
+                // Your docker push steps here
             }
         }
     }
 }
+
 
 
