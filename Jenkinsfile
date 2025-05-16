@@ -1,44 +1,59 @@
 pipeline {
     agent any
-environment {
-    SONAR_TOKEN = credentials('sonar-token')  
-}
+
+    environment {
+        SONAR_TOKEN = credentials('sonar-token')     // SonarQube token stored in Jenkins
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-creds') // Docker Hub credentials
+        DOCKER_IMAGE = "your-dockerhub-username/react-app"
+    }
+
+    tools {
+        nodejs "NodeJS_18"       // Ensure Node.js is installed and configured in Jenkins
+    }
+
     stages {
         stage('Checkout') {
             steps {
-git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application.git'
+                git credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application.git'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    script {
-                        def scannerHome = tool 'SonarQubeScanner'
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
-                    }
+                    sh """
+                        npm install
+                        /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQubeScanner/bin/sonar-scanner \
+                        -Dsonar.projectKey=react-app \
+                        -Dsonar.sources=. \
+                        -Dsonar.login=$SONAR_TOKEN
+                    """
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker Image...'
-                // Your docker build steps here
+                sh """
+                    docker build -t $DOCKER_IMAGE:latest .
+                """
             }
         }
 
         stage('Scan with Trivy') {
             steps {
-                echo 'Scanning with Trivy...'
-                // Your Trivy scan steps here
+                sh """
+                    trivy image --exit-code 0 --severity CRITICAL,HIGH $DOCKER_IMAGE:latest
+                """
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                echo 'Pushing to Docker Hub...'
-                // Your docker push steps here
+                sh """
+                    echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
+                    docker push $DOCKER_IMAGE:latest
+                """
             }
         }
     }
