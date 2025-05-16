@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         SONARQUBE_SERVER = 'SonarQube'
+        DOCKER_IMAGE = 'grishmai28/react-app:latest'
     }
 
     stages {
@@ -24,16 +25,16 @@ pipeline {
             }
         }
 
-       stage('SonarQube Scan') {
-    steps {
-        withSonarQubeEnv("${SONARQUBE_SERVER}") {
-            script {
-                def scannerHome = tool 'SonarQubeScanner'  // this must match the name in Global Tool Config
-                sh "${scannerHome}/bin/sonar-scanner"
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    script {
+                        def scannerHome = tool 'SonarQubeScanner'
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Docker Build') {
             steps {
@@ -46,6 +47,17 @@ pipeline {
                 sh 'trivy image react-app'
             }
         }
+
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'grishmai28', passwordVariable: 'Grishma@25')]) {
+                    sh """
+                        echo "Grishma@25" | docker login -u "grishmai28" --password-stdin
+                        docker push react-app
+                    """
+                }
+            }
+        }
     }
 }
-      
+
