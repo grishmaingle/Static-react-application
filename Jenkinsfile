@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     // Build and tag the Docker image for Docker Hub
-                    dockerImage = docker.build('grishmai28/react-app:latest')
+                    def dockerImage = docker.build("grishmai28/react-app:latest")
                 }
             }
         }
