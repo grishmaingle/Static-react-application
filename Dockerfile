@@ -1,5 +1,5 @@
 # Use official Node image as build stage
-FROM node:20-alpine3.21
+FROM node:20-alpine3.21 AS build
 
 WORKDIR /app
 COPY package*.json ./
