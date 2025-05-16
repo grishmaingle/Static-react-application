@@ -13,16 +13,22 @@ pipeline {
             }
         }
 
+
+    tools {
+        // Match with the name used in Global Tool Configuration
+        sonarQubeScanner 'SonarQubeScanner'
+    }
+
+    stages {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    script {
-                        def scannerHome = tool 'SonarQubeScanner'
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=."
-                    }
+                    sh 'sonar-scanner -Dsonar.projectKey=your_project_key -Dsonar.sources=./src'
                 }
             }
         }
+    }
+
 
         stage('Build Docker Image') {
             steps {
