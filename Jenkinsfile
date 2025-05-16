@@ -3,58 +3,55 @@ pipeline {
 
     environment {
         DOCKER_HUB_CREDENTIALS = 'docker-hub-creds'
-        GIT_CREDENTIALS_ID = 'github-creds' // The ID you just created
+        GIT_CREDENTIALS_ID = 'github-creds'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: "${GIT_CREDENTIALS_ID}", branch: 'main', url: 'https://github.com/grishmaingle/Static-react-application.git'
+                git credentialsId: "${github-creds}", branch: 'main', url: 'https://github.com/grishmaingle/Static-react-application.git'
             }
         }
 
         stage('SonarQube Analysis') {
-  steps {
-    withSonarQubeEnv('SonarQube') {
-      script {
-        def scannerHome = tool 'SonarQubeScanner'
-        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=."
-      }
-    }
-  }
-}
-
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    script {
+                        def scannerHome = tool 'SonarQubeScanner'
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=."
+                    }
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build and tag the Docker image for Docker Hub
-                    def dockerImage = docker.build("grishmai28/react-app:latest")
+                    dockerImage = docker.build("grishmai28/react-app:latest")
                 }
             }
         }
 
         stage('Scan with Trivy') {
-    steps {
-        sh 'trivy image grishmai28/react-app:latest || true'
-    }
-}
-
+            steps {
+                sh 'trivy image grishmai28/react-app:latest || true'
+            }
+        }
 
         stage('Push to Docker Hub') {
             steps {
-                // Log in to Docker Hub using Jenkins-stored credentials, then push the image
                 withCredentials([
                     usernamePassword(
-                        credentialsId: env.docker-hub-creds, 
-                        usernameVariable: 'grishmai28', 
+                        credentialsId: "${docker-hub-creds}",
+                        usernameVariable: 'grishmai28',
                         passwordVariable: 'Grishma@25'
                     )
                 ]) {
-                    sh 'echo $Grishma@25 | docker login -u $grishmai28 --password-stdin'
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push grishmai28/react-app:latest'
                 }
-                sh 'docker push grishmai28/react-app:latest'
             }
         }
     }
 }
+
