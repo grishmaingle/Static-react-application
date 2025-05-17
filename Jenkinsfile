@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/grishmaingle/Static-react-application.git'
+git branch: 'main', url: 'https://github.com/grishmaingle/Static-react-application.git'
             }
         }
 
