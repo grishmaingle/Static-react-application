@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'  // your NodeJS tool name
+        nodejs 'NodeJS'  // Ensure this matches the NodeJS tool name configured in Jenkins
     }
 
     environment {
@@ -17,16 +17,19 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
+
         stage('Build React App') {
             steps {
                 sh 'npm run build'
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
@@ -43,6 +46,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -50,6 +54,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Scan Docker Image with Trivy') {
             steps {
                 sh '''
@@ -57,6 +62,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Push Docker Image to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
@@ -67,19 +73,20 @@ pipeline {
                 }
             }
         }
-    }  // end of stages block
+    }
 
     post {
         success {
             echo '✅ Pipeline completed successfully!'
-            // Optional: Clean up Docker images to save space
+            // Optional cleanup
             sh 'docker rmi ${IMAGE_NAME}:latest || true'
         }
+
         failure {
-            echo '❌ Pipeline failed. Check logs for more details.'
+            echo '❌ Pipeline failed. Check logs for details.'
         }
+
         always {
-            // Clean up workspace if needed
             cleanWs(cleanWhenNotBuilt: false,
                     deleteDirs: true,
                     disableDeferredWipeout: true,
