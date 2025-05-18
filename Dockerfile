@@ -1,22 +1,35 @@
-# Build stage
+# Stage 1: Build the React app using Node.js
 FROM node:18-alpine AS builder
+
+# Set working directory
 WORKDIR /app
+
+# Copy dependencies files
 COPY package*.json ./
+
+# Install dependencies
 RUN npm install
+
+# Copy all project files
 COPY . .
+
+# Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:1.25.2-alpine
+# Stage 2: Serve the app using Nginx
+FROM nginx:stable-alpine
 
-# Upgrade all packages to latest patched versions to fix vulnerabilities
-RUN apk update && apk upgrade && apk --no-cache add curl libexpat libxml2 libxslt
+# Copy custom nginx config (optional but recommended)
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Remove default nginx static files
+# Remove default static assets and add our build
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy build files from builder
+# Copy build artifacts to Nginx web root
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Expose port 80
 EXPOSE 80
+
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
