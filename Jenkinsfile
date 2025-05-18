@@ -63,18 +63,17 @@ pipeline {
             }
         }
 
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                        docker push ${IMAGE_NAME}:latest
-                        docker logout
-                    '''
-                }
-            }
+        stage('Push Docker Image to DockerHub') {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+            sh '''
+                echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+                docker push grishmaingle/react-static-app:latest
+            '''
         }
     }
+}
+
 
     post {
         success {
