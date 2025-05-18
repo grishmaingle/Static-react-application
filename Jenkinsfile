@@ -6,14 +6,19 @@ pipeline {
     DOCKER_TAG = 'latest'
   }
 
-  stages {
-          stage('Checkout') {
-  steps {
-    checkout scm
+  tools {
+    nodejs 'NodeJS'               // Ensure NodeJS tool is configured as 'NodeJS'
+    sonarQube 'SonarQubeScanner'  // This name must match Global Tool Configuration
   }
-}
 
-    
+  stages {
+
+    stage('Checkout Source Code') {
+      steps {
+        checkout scm
+      }
+    }
+
     stage('Install Dependencies & Build') {
       steps {
         sh '''
@@ -23,18 +28,18 @@ pipeline {
       }
     }
 
-    stage('SonarQube Scan') {
+    stage('SonarQube Analysis') {
       environment {
         SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
       }
       steps {
-        withSonarQubeEnv('MySonarQube') {
+        withSonarQubeEnv('MySonarQube') { // Must match the server name in Jenkins config
           sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
         }
       }
     }
 
-    stage('Docker Build') {
+    stage('Docker Build Image') {
       steps {
         sh '''
           docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
@@ -42,7 +47,7 @@ pipeline {
       }
     }
 
-    stage('Trivy Scan') {
+    stage('Security Scan with Trivy') {
       steps {
         sh '''
           trivy image --exit-code 0 --severity MEDIUM,HIGH $DOCKER_IMAGE:$DOCKER_TAG
@@ -50,7 +55,7 @@ pipeline {
       }
     }
 
-    stage('Docker Login & Push') {
+    stage('Docker Login & Push to DockerHub') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh '''
@@ -61,7 +66,7 @@ pipeline {
       }
     }
 
-    stage('Deploy Container') {
+    stage('Deploy Docker Container') {
       steps {
         sh '''
           docker stop react-app || true
@@ -69,6 +74,15 @@ pipeline {
           docker run -d -p 80:80 --name react-app $DOCKER_IMAGE:$DOCKER_TAG
         '''
       }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Build failed. Check logs.'
+    }
+    success {
+      echo 'Pipeline executed successfully!'
     }
   }
 }
