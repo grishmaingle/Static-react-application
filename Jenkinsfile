@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'  // Make sure this matches your Jenkins NodeJS installation name
+        nodejs 'NodeJS'  // your NodeJS tool name
     }
 
     environment {
@@ -17,19 +17,16 @@ pipeline {
                 checkout scm
             }
         }
-
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
-
         stage('Build React App') {
             steps {
                 sh 'npm run build'
             }
         }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
@@ -46,7 +43,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -54,7 +50,6 @@ pipeline {
                 '''
             }
         }
-
         stage('Scan Docker Image with Trivy') {
             steps {
                 sh '''
@@ -62,18 +57,17 @@ pipeline {
                 '''
             }
         }
-
         stage('Push Docker Image to DockerHub') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-            sh '''
-                echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-                docker push grishmaingle/react-static-app:latest
-            '''
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    sh '''
+                        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+                        docker push ${IMAGE_NAME}:latest
+                    '''
+                }
+            }
         }
-    }
-}
-
+    }  // end of stages block
 
     post {
         success {
