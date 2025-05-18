@@ -7,13 +7,13 @@ pipeline {
   }
 
   stages {
+          stage('Checkout') {
+  steps {
+    checkout scm
+  }
+}
 
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/yourusername/your-react-repo.git'
-      }
-    }
-
+    
     stage('Install Dependencies & Build') {
       steps {
         sh '''
