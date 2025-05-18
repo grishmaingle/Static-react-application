@@ -1,20 +1,16 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "grishmai28/react-app"
+    tools {
+        nodejs 'NodeJS'     // must match the name configured in Jenkins tools
     }
 
-    tools {
-        nodejs "NodeJS"  // NodeJS name you set in Jenkins
+    environment {
+        IMAGE_NAME = 'grishmaingle/react-static-app'
+        SONARQUBE = 'MySonarQubeServer'  // name configured in Jenkins under "Manage Jenkins → Configure System"
     }
 
     stages {
-        stage('Clone Code') {
-            steps {
-git url: 'https://github.com/grishmaingle/Static-react-application.git', branch: 'main'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
@@ -29,39 +25,34 @@ git url: 'https://github.com/grishmaingle/Static-react-application.git', branch:
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarQube Scanner'
-            }
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=static-react-app -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/build/**"
+                withSonarQubeEnv("${env.SONARQUBE}") {
+                    sh 'npx sonar-scanner -Dsonar.projectKey=StaticApp -Dsonar.sources=src -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE ."
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
         stage('Scan Image with Trivy') {
             steps {
-                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL $DOCKER_IMAGE"
+                sh 'trivy image $IMAGE_NAME'
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$PASS" | docker login -u "$USER" --password-stdin
-                        docker push $DOCKER_IMAGE
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME
                     '''
                 }
             }
         }
     }
 }
-
-
