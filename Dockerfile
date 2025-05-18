@@ -1,5 +1,7 @@
 # # Stage 1: Build the React app
 FROM node:20-alpine3.21 AS build
+FROM alpine:3.21.3
+RUN apk update && apk upgrade
 
 WORKDIR /app
 
