@@ -1,6 +1,6 @@
 # Stage 1: Build the React app
 # Stage 1: Build the React app
-FROM nginx:alpine3.21.4
+FROM nginx:1.25.2-alpine
 
 WORKDIR /app
 
