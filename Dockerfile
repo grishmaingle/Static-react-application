@@ -1,29 +1,24 @@
-# Stage 1: Build React app
+# Stage 1: Build the React app
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 
-# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the source code
 COPY . .
-
-# Build the React app
 RUN npm run build
 
-# Stage 2: Serve with nginx
+# Stage 2: Serve with nginx, update Alpine packages for security fixes
 FROM nginx:1.25.2-alpine
 
-# Remove default nginx static files
+# Update Alpine packages including curl and libcrypto to fixed versions
+RUN apk update && apk upgrade curl libcrypto3 && apk cache clean
+
+# Remove default nginx content
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy build output from builder stage to nginx html folder
+# Copy build output from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
