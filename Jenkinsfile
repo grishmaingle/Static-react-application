@@ -7,13 +7,11 @@ pipeline {
   }
 
   tools {
-    nodejs 'NodeJS'               // Ensure NodeJS tool is configured as 'NodeJS'
-    sonarQube 'SonarQubeScanner'  // This name must match Global Tool Configuration
+    nodejs 'NodeJS'  // Make sure this matches your NodeJS installation name in Jenkins
   }
 
   stages {
-
-    stage('Checkout Source Code') {
+    stage('Checkout') {
       steps {
         checkout scm
       }
@@ -28,18 +26,15 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
-      environment {
-        SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
-      }
+    stage('SonarQube Scan') {
       steps {
-        withSonarQubeEnv('MySonarQube') { // Must match the server name in Jenkins config
-          sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
+        withSonarQubeEnv('MySonarQube') {
+          sh 'sonar-scanner'
         }
       }
     }
 
-    stage('Docker Build Image') {
+    stage('Docker Build') {
       steps {
         sh '''
           docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
@@ -47,7 +42,7 @@ pipeline {
       }
     }
 
-    stage('Security Scan with Trivy') {
+    stage('Trivy Scan') {
       steps {
         sh '''
           trivy image --exit-code 0 --severity MEDIUM,HIGH $DOCKER_IMAGE:$DOCKER_TAG
@@ -55,7 +50,7 @@ pipeline {
       }
     }
 
-    stage('Docker Login & Push to DockerHub') {
+    stage('Docker Login & Push') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh '''
@@ -66,7 +61,7 @@ pipeline {
       }
     }
 
-    stage('Deploy Docker Container') {
+    stage('Deploy Container') {
       steps {
         sh '''
           docker stop react-app || true
@@ -76,13 +71,6 @@ pipeline {
       }
     }
   }
-
-  post {
-    failure {
-      echo 'Build failed. Check logs.'
-    }
-    success {
-      echo 'Pipeline executed successfully!'
-    }
-  }
 }
+
+    
