@@ -1,6 +1,6 @@
 # Stage 1: Build the React app
 # Stage 1: Build the React app
-FROM node:20-alpine3.21 AS build
+FROM nginx:alpine3.21.4
 
 WORKDIR /app
 
