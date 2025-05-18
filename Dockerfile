@@ -1,4 +1,4 @@
-## Stage 1: Build the React app
+# Stage 1: Build the React app (Vite)
 FROM node:18-alpine AS builder
 WORKDIR /app
 
@@ -8,15 +8,12 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve with nginx (Debian-based image)
+# Stage 2: Use nginx to serve built app
 FROM nginx:1.25.2
 
-# Remove default nginx static files
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy React build output (default folder is 'build')
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
