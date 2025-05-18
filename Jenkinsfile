@@ -1,96 +1,74 @@
 pipeline {
-    agent any
+  agent any
 
-    tools {
-        nodejs 'NodeJS'  // Ensure this matches the NodeJS tool name configured in Jenkins
+  environment {
+    DOCKER_IMAGE = 'grishmai28/react-static-app'
+    DOCKER_TAG = 'latest'
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/yourusername/your-react-repo.git'
+      }
     }
 
-    environment {
-        IMAGE_NAME = 'grishmaingle/react-static-app'
-        SONARQUBE_SERVER = 'MySonarQubeServer'
-        SONAR_HOST_URL = 'http://15.206.23.10:9000'
+    stage('Install Dependencies & Build') {
+      steps {
+        sh '''
+          npm install
+          npm run build
+        '''
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
+    stage('SonarQube Scan') {
+      environment {
+        SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
+      }
+      steps {
+        withSonarQubeEnv('MySonarQube') {
+          sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
         }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Build React App') {
-            steps {
-                sh 'npm run build'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            npx sonar-scanner \
-                              -Dsonar.projectKey=StaticApp \
-                              -Dsonar.projectName=StaticReactApp \
-                              -Dsonar.sources=src \
-                              -Dsonar.host.url=${SONAR_HOST_URL} \
-                              -Dsonar.login=${SONAR_TOKEN}
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh '''
-                    docker build -t ${IMAGE_NAME}:latest .
-                '''
-            }
-        }
-
-        stage('Scan Docker Image with Trivy') {
-            steps {
-                sh '''
-                    trivy image --exit-code 0 --severity CRITICAL,HIGH ${IMAGE_NAME}:latest
-                '''
-            }
-        }
-
-        stage('Push Docker Image to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh '''
-                        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-                        docker push ${IMAGE_NAME}:latest
-                    '''
-                }
-            }
-        }
+      }
     }
 
-    post {
-        success {
-            echo '✅ Pipeline completed successfully!'
-            // Optional cleanup
-            sh 'docker rmi ${IMAGE_NAME}:latest || true'
-        }
-
-        failure {
-            echo '❌ Pipeline failed. Check logs for details.'
-        }
-
-        always {
-            cleanWs(cleanWhenNotBuilt: false,
-                    deleteDirs: true,
-                    disableDeferredWipeout: true,
-                    notFailBuild: true)
-        }
+    stage('Docker Build') {
+      steps {
+        sh '''
+          docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+        '''
+      }
     }
+
+    stage('Trivy Scan') {
+      steps {
+        sh '''
+          trivy image --exit-code 0 --severity MEDIUM,HIGH $DOCKER_IMAGE:$DOCKER_TAG
+        '''
+      }
+    }
+
+    stage('Docker Login & Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push $DOCKER_IMAGE:$DOCKER_TAG
+          '''
+        }
+      }
+    }
+
+    stage('Deploy Container') {
+      steps {
+        sh '''
+          docker stop react-app || true
+          docker rm react-app || true
+          docker run -d -p 80:80 --name react-app $DOCKER_IMAGE:$DOCKER_TAG
+        '''
+      }
+    }
+  }
 }
