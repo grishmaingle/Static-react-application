@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Clone Code') {
             steps {
-                git 'https://github.com/grishmaingle/Static-react-application.git'
+git url: 'https://github.com/grishmaingle/Static-react-application.git', branch: 'main'
             }
         }
 
