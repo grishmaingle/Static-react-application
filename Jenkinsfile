@@ -29,20 +29,19 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${env.SONARQUBE}") {
-                    sh '''
-                        npx sonar-scanner \
-                        -Dsonar.projectKey=StaticApp \
-                        -Dsonar.projectName=StaticReactApp \
-                        -Dsonar.sources=src \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN
-                    '''
-                }
-            }
-        }
+        withSonarQubeEnv('MySonarQubeServer') {
+  withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+    sh '''
+      npx sonar-scanner \
+        -Dsonar.projectKey=StaticApp \
+        -Dsonar.projectName=StaticReactApp \
+        -Dsonar.sources=src \
+        -Dsonar.host.url=http://15.206.23.10:9000 \
+        -Dsonar.login=$SONAR_TOKEN
+    '''
+  }
+}
+
 
         stage('Build Docker Image') {
             steps {
