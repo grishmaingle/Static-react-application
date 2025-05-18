@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'  // Ensure this name matches your Jenkins NodeJS tool config
+        nodejs 'NodeJS'
     }
 
     environment {
         IMAGE_NAME = 'grishmaingle/react-static-app'
-        SONARQUBE = 'MySonarQubeServer' // Name configured in Jenkins
+        SONARQUBE = 'MySonarQubeServer'
     }
 
     stages {
@@ -62,24 +62,4 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $IMAGE_NAME:latest
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check logs for more details.'
-        }
-    }
-}
-
-}
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',]()
