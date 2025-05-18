@@ -6,7 +6,7 @@ pipeline {
     }
 
     tools {
-        nodejs "NodeJS 18"  // NodeJS name you set in Jenkins
+        nodejs "NodeJS"  // NodeJS name you set in Jenkins
     }
 
     stages {
