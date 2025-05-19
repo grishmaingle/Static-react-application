@@ -42,8 +42,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
-                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
         }
@@ -54,7 +53,7 @@ pipeline {
                     mkdir -p $HOME/.local/bin
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/.local/bin
                     export PATH=$HOME/.local/bin:$PATH
-                    trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    trivy image ${DOCKER_IMAGE}:latest
                 '''
             }
         }
@@ -65,7 +64,6 @@ pipeline {
                     script {
                         sh """
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                            docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
                             docker push ${DOCKER_IMAGE}:latest
                         """
                     }
@@ -97,4 +95,3 @@ pipeline {
         }
     }
 }
-
