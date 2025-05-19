@@ -23,21 +23,20 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
-                        sh """
-                            npx sonar-scanner \
-                            -Dsonar.projectKey=static-react-app \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://15.206.23.10:9000 \
-                            -Dsonar.login=$SONAR_AUTH_TOKEN
-                        """
-                    }
-                }
+       stage('SonarQube Analysis') {
+    steps {
+        withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
+            withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                sh 'npx sonar-scanner ' +
+                   '-Dsonar.projectKey=static-react-app ' +
+                   '-Dsonar.sources=. ' +
+                   '-Dsonar.host.url=http://15.206.23.10:9000 ' +
+                   '-Dsonar.login=$SONAR_AUTH_TOKEN'
             }
         }
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
