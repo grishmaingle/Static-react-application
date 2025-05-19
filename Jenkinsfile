@@ -51,7 +51,7 @@ pipeline {
                     mkdir -p $HOME/.local/bin
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/.local/bin
                     export PATH=$HOME/.local/bin:$PATH
-                    trivy image grishmai28/react-app:65
+                    trivy image grishmai28/react-app:70
                 '''
             }
         }
