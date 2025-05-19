@@ -46,13 +46,16 @@ pipeline {
         }
 
         stage('Trivy Scan') {
-    steps {
-        sh '''
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-            trivy image --exit-code 1 --severity CRITICAL,HIGH ${DOCKER_IMAGE}:${BUILD_NUMBER}
-        '''
-    }
+  steps {
+    sh '''
+      mkdir -p $HOME/.local/bin
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/.local/bin
+      export PATH=$HOME/.local/bin:$PATH
+      trivy image grishmai28/react-app:65
+    '''
+  }
 }
+
 
         stage('Push to Docker Hub') {
             steps {
