@@ -45,6 +45,15 @@ pipeline {
             }
         }
 
+        stage('Trivy Scan') {
+    steps {
+        sh '''
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+            trivy image --exit-code 1 --severity CRITICAL,HIGH ${DOCKER_IMAGE}:${BUILD_NUMBER}
+        '''
+    }
+}
+
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
