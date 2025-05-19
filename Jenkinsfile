@@ -3,11 +3,11 @@ pipeline {
 
     environment {
         SONARQUBE_SERVER = 'MySonarQubeServer'  // Matches your Jenkins SonarQube config name
-        DOCKER_IMAGE = 'grishmai28/react-app'   // Corrected to your DockerHub repo
+        DOCKER_IMAGE = 'grishmai28/react-app'   // DockerHub repo
     }
 
     tools {
-        nodejs 'NodeJS'  // Ensure this matches your Jenkins NodeJS tool name
+        nodejs 'NodeJS'  // Jenkins NodeJS tool name
     }
 
     stages {
@@ -46,16 +46,15 @@ pipeline {
         }
 
         stage('Trivy Scan') {
-  steps {
-    sh '''
-      mkdir -p $HOME/.local/bin
-      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/.local/bin
-      export PATH=$HOME/.local/bin:$PATH
-      trivy image grishmai28/react-app:65
-    '''
-  }
-}
-
+            steps {
+                sh '''
+                    mkdir -p $HOME/.local/bin
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/.local/bin
+                    export PATH=$HOME/.local/bin:$PATH
+                    trivy image grishmai28/react-app:65
+                '''
+            }
+        }
 
         stage('Push to Docker Hub') {
             steps {
@@ -63,6 +62,24 @@ pipeline {
                     script {
                         sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                         sh "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+
+        // 👇 New Stage: Deploy container to EC2
+        stage('Deploy to EC2') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@<your-ec2-public-ip> '
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin &&
+                            docker pull ${DOCKER_IMAGE}:${BUILD_NUMBER} &&
+                            docker rm -f react-app-container || true &&
+                            docker run -d -p 80:80 --name react-app-container ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        '
+                        """
                     }
                 }
             }
