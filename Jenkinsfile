@@ -73,7 +73,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh """
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@<your-ec2-public-ip> '
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@15.206.23.10 '
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin &&
                             docker pull ${DOCKER_IMAGE}:${BUILD_NUMBER} &&
                             docker rm -f react-app-container || true &&
