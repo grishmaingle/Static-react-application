@@ -46,21 +46,17 @@ withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKE
             }
         }
 
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        sh """
-                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                            docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                            docker push ${DOCKER_IMAGE}:latest
-                        """
-                    }
-                }
+stage('Push to Docker Hub') {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+            script {
+                sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                sh "docker push your-dockerhub-username/your-image-name:latest"
             }
         }
     }
+}
+
 
     post {
         always {
