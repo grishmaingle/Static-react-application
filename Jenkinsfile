@@ -43,6 +43,7 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
+                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
                 }
             }
         }
@@ -65,6 +66,7 @@ pipeline {
                         sh """
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                             docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                            docker push ${DOCKER_IMAGE}:latest
                         """
                     }
                 }
@@ -78,9 +80,9 @@ pipeline {
                         sh '''
                             ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@15.206.23.10 "
                                 echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin &&
-                                docker pull ${DOCKER_IMAGE}:${BUILD_NUMBER} &&
+                                docker pull ${DOCKER_IMAGE}:latest &&
                                 docker rm -f react-app-container || true &&
-                                docker run -d -p 80:80 --name react-app-container ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                                docker run -d -p 80:80 --name react-app-container ${DOCKER_IMAGE}:latest
                             "
                         '''
                     }
@@ -95,3 +97,4 @@ pipeline {
         }
     }
 }
+
