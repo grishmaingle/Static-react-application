@@ -1,5 +1,7 @@
-# Stage 1: Build the React app using Node.js
 FROM node:18-alpine AS builder
+
+RUN apk update && apk upgrade libxml2
+...
 
 # Set working directory
 WORKDIR /app
