@@ -26,6 +26,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy build artifacts to Nginx web root
+# NOTE: React's default build directory is 'build' (not 'dist'), so this might cause problems if your React build output is in 'build'
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80
