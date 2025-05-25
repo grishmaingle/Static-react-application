@@ -50,11 +50,11 @@ prometheus.yml: Config for Prometheus monitoring
 cretentials 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 - cAdvisory Dashboard shows the CPU ram
-"C:\Users\lenovo\Pictures\Screenshots\Screenshot (253).png"
-"C:\Users\lenovo\Pictures\Screenshots\Screenshot (252).png"
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 - Prometheus setup
-"C:\Users\lenovo\Pictures\Screenshots\Screenshot (251).png"
+- ![Screenshot 2025-05-19 231308](https://github.com/user-attachments/assets/d5b731d6-7872-4528-8054-6da8fd0950c8)
+- ![Screenshot 2025-05-20 003128](https://github.com/user-attachments/assets/460923da-4650-4ed5-86ee-5c071104a4c7)
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 - Visuallization from grafana
 ![Screenshot 2025-05-19 233236](https://github.com/user-attachments/assets/5218f012-09d4-4cea-8d3f-f58317c55581)
